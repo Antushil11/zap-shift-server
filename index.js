@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors');
 const app = express()
 require('dotenv').config();//dot env
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const port = process.env.PORT || 3000
 
@@ -43,15 +43,37 @@ async function run() {
             quary.senderEmail = email;
         }
 
-        const cursor = parcelsCollection.find(quary);
+        const options = {sort:{createdAt: -1}}
+
+        const cursor = parcelsCollection.find(quary,options);
         const result = await cursor.toArray();
         res.send(result)
     })
 
+    app.get('/parcels/:id', async(req, res) =>{
+      const id = req.params.id;
+      const quary = {_id: new ObjectId(id)}
+      const result = await parcelsCollection.findOne(quary)
+
+      res.send(result)
+    })
+
     app.post('/parcels',async(req, res)=>{
         const parcel = req.body;
+        //percel created time
+        parcel.createdAt = new Date();
+
         const result = await parcelsCollection.insertOne(parcel);
         res.send(result)
+    })
+
+
+    app.delete('/parcels/:id', async(req, res) =>{
+         const id = req.params.id;
+         const quary = {_id: new ObjectId(id)}
+
+         const result = await parcelsCollection.deleteOne(quary)
+         res.send(result)
     })
 
 
